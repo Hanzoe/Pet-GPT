@@ -10,7 +10,7 @@ Pet-GPT 是一个使用 PyQt 编写的桌面宠物程序，支持调用 OpenAI �
 </div>
 
 bilibili连接
-
+https://www.bilibili.com/video/BV1xM4y1y7e7/?vd_source=0256cdccbe38c132828c06c0c3d6dd4f
 
 ## 特点
 
