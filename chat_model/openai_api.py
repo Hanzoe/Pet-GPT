@@ -1,0 +1,113 @@
+import requests
+import json
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
+from PyQt5.QtCore import QThread, pyqtSignal
+from queue import Queue
+import time
+
+class OpenAI_API(QThread):
+    response_received = pyqtSignal(dict, str)
+
+    def __init__(self, config):
+        super().__init__()
+        self.config = config
+        self.prompt_queue = Queue()
+        self.api_key = self.config["OpenAI"]["OPENAI_API_KEY"]
+        self.llm_model = self.config["OpenAI"]["LLM_MODEL"]
+        self.proxy = self.config["OpenAI"]["PROXY"]
+        self.proxies = {
+            "http": self.proxy,
+            "https": self.proxy,
+        }
+        self.timeout_seconds = int(self.config["OpenAI"]["TIMEOUT_SECONDS"])
+        self.max_retry = int(self.config["OpenAI"]["MAX_RETRY"])
+        self.openaiapi_url = self.config["OpenAI"]["OPENAIAPI_URL"]
+        self.top_p = float(self.config["OpenAI"]["TOP_P"])
+        self.temperature = float(self.config["OpenAI"]["TEMPERATURE"])
+        self.max_tokens = int(self.config["OpenAI"]["MAX_TOKENS"])
+        self.session = requests.Session()
+        self.headers = {"Content-Type": "application/json", "Authorization": f"Bearer {self.api_key}"}
+        self._configure_retry_strategy()
+
+    def _configure_retry_strategy(self):
+        retry_strategy = Retry(
+            total=self.max_retry,
+            status_forcelist=[429, 500, 502, 503, 504],
+            method_whitelist=["GET", "POST"],
+            backoff_factor=1,
+        )
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        self.session.mount("http://", adapter)
+        self.session.mount("https://", adapter)
+
+    def run(self):
+        while True:
+            prompt = self.prompt_queue.get()
+            self._generate_response(prompt)
+            time.sleep(0.1)  # Add a sleep time after processing one request
+
+    def _generate_response(self, prompt):
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.api_key}",
+        }
+
+        # Add messages structure for OpenAI API
+        messages = [
+            {"role": "system", "content": "You are an AI language model."},
+            {"role": "user", "content": prompt},
+        ]
+
+        data = {
+            "model": self.llm_model,
+            "messages": messages,  # Use messages instead of prompt
+            "temperature": self.temperature,
+            "top_p": self.top_p,
+            "max_tokens": self.max_tokens,
+        }
+
+        try:
+            response = self.session.post(
+                self.openaiapi_url, headers=headers, json=data, proxies=self.proxies, timeout=self.timeout_seconds
+            )
+            response.raise_for_status()
+            result = response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Error: {e}")
+            print(f"Error details: {e.response.text}")
+            result = {"error": str(e)}
+        self.response_received.emit(result, prompt)
+
+    def send_request(self, prompt):
+        if not prompt:
+            return
+
+        # Add messages structure for OpenAI API
+        messages = [
+            {"role": "system", "content": "You are an AI language model."},
+            {"role": "user", "content": prompt},
+        ]
+
+        data = {
+            "model": self.llm_model,
+            "messages": messages,  # Use messages instead of prompt
+            "temperature": self.temperature,
+            "top_p": self.top_p,
+            "max_tokens": self.max_tokens,
+        }
+
+        try:
+            response = requests.post(
+                self.endpoint,
+                headers=self.headers,
+                data=json.dumps(data),
+                timeout=20,
+                proxies=self.proxies,
+            )
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            self.response_received.emit(None, prompt)
+            self.error_signal.emit(f"{self.config['Pet']['NICKNAME']}: 发生错误 - {str(e)}")
+
