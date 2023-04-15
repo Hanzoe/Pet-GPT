@@ -63,8 +63,8 @@ bilibili连接
   ![image](https://user-images.githubusercontent.com/46673445/232179374-458f6fd5-85d3-41ee-889e-28b98174b240.png)
 
 - 互动状态下，可实现基于GPT的聊天以及其他功能
+  ![image](https://user-images.githubusercontent.com/46673445/232196578-0db60c9b-594a-486d-8918-634df3dacd6b.png)
 
-  ![image](https://user-images.githubusercontent.com/46673445/232179379-ce3bc253-aae8-45f0-8312-15518c9cff1c.png)
 
 ## 自定义插件说明
 ### 常规按钮格式
