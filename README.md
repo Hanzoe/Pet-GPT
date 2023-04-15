@@ -6,6 +6,9 @@ Pet-GPT 是一个使用 PyQt 编写的桌面宠物程序，支持调用 OpenAI �
 
 <img src="https://user-images.githubusercontent.com/46673445/232178202-3e4a7558-be9a-4708-b6e4-a8baff0080af.png" alt="dog" width="200"/>
 
+bilibili连接
+
+
 ## 特点
 
 - 一个简单的桌面小宠物，支持自定义图像和昵称
@@ -31,7 +34,9 @@ Pet-GPT 是一个使用 PyQt 编写的桌面宠物程序，支持调用 OpenAI �
 5. 安装依赖包
 
    ```
-   conda activate --name petgpt python=3.9
+   conda create --name petgpt python=3.9
+   conda activate petgpt
+   pip install -r requirements.txt
    ```
 
    
@@ -70,6 +75,7 @@ Pet-GPT 是一个使用 PyQt 编写的桌面宠物程序，支持调用 OpenAI �
 - [ ] 聊天界面的角色扮演
 
 ## 贡献者
+
 
 ## 许可证
 
