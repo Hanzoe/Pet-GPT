@@ -75,6 +75,7 @@ class OpenAI_API(QThread):
         }
 
         try:
+            time.sleep(2)
             response = self.session.post(
                 self.openaiapi_url, headers=headers, json=data, proxies=self.proxies, timeout=self.timeout_seconds
             )

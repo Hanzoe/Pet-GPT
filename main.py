@@ -51,7 +51,7 @@ class DesktopPet(QWidget):
         self.pet_pixmap = self.pet_icon.pixmap(256,256)
         self.nickname = self.config["Pet"]["NICKNAME"]
 
-        #右键功能区
+        #右键功能区，可以自定义（擅长的朋友）
         self.menu = QMenu(self)
         #调用gpt聊天框
         chat_action = QAction("聊天", self, triggered=self.show_chat_dialog)
@@ -158,13 +158,13 @@ class DesktopPet(QWidget):
                 config.write(f)
     
     # 宠物移动相关
-    def enterEvent(self, event):
-        if self.config.getboolean("Pet", "RANDOM_WALK"):
-            self.timer.stop()
+    # def enterEvent(self, event):
+    #     if self.config.getboolean("Pet", "RANDOM_WALK"):
+    #         self.timer.stop()
 
-    def leaveEvent(self, event):
-        if self.config.getboolean("Pet", "RANDOM_WALK"):
-            self.timer.start()
+    # def leaveEvent(self, event):
+    #     if self.config.getboolean("Pet", "RANDOM_WALK"):
+    #         self.timer.start()
 
     def set_new_timers(self):
         stop_time = random.randint(2000, 5000)  # 生成一个2~5秒的随机数，作为移动时间
@@ -273,7 +273,7 @@ class DesktopPet(QWidget):
 
 
     def toggle_random_question(self, state):
-        if state == Qt.Checked and self.isHidden():
+        if state == Qt.Checked and not self.isHidden():
             self.stop_timer.start()
         else:
             self.stop_timer.stop()
