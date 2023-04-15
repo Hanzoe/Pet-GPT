@@ -61,6 +61,20 @@ bilibili连接
 
   ![image](https://user-images.githubusercontent.com/46673445/232179379-ce3bc253-aae8-45f0-8312-15518c9cff1c.png)
 
+## 自定义插件说明
+### 常规按钮格式
+1. 在chatdialog.py文件找到初始化函数
+   image.png
+2. 按照模板添加槽
+3. 定义函数
+   image.png
+
+### 下拉列表插件格式
+1. 在chatdialog.py文件找到初始化函数
+   - self.custom_dropdown
+   image.png
+2. 去self.full_slot中定义该选项
+
 ## 开发日志
 
 ### v4
@@ -101,3 +115,8 @@ bilibili连接
 一个人也许走的很快，但是一群人可以走得更远！
 
 QQ:2500066889
+
+## 参考
+1. https://github.com/f/awesome-chatgpt-prompts（获取prompts命令）
+2. https://github.com/tommyli3318/desktop-pet（想做桌面宠物版的）
+3. https://github.com/binary-husky/chatgpt_academic（曾经在这上面做插件奉献，从而得到灵感）

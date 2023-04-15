@@ -59,7 +59,7 @@ class OpenAI_API(QThread):
         # 在发送的消息中包含上下文
         if context:
             for msg in context.split('\n'):
-                if not msg.strip():
+                if not msg or ': ' not in msg:
                     continue
                 role, content = msg.split(': ', 1)
                 messages.append({"role": role.lower(), "content": content.strip()})

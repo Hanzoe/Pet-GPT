@@ -42,13 +42,13 @@ class DesktopPet(QWidget):
         #父容器
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.SubWindow)
         self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setFixedSize(128, 128)
+        self.setFixedSize(256,256)
         screen_geometry = QApplication.desktop().availableGeometry()
         self.move(screen_geometry.width() - self.width()-500, screen_geometry.height() - self.height()-100)
 
         #宠物信息
         self.pet_icon = QIcon(self.config["Pet"]["PET_ICON"])
-        self.pet_pixmap = self.pet_icon.pixmap(128, 128)
+        self.pet_pixmap = self.pet_icon.pixmap(256,256)
         self.nickname = self.config["Pet"]["NICKNAME"]
 
         #右键功能区
@@ -102,7 +102,7 @@ class DesktopPet(QWidget):
             # 修改配置项
             self.config.set('Pet', 'NICKNAME', new_nickname)
             # 保存修改后的配置文件
-            with open('config.ini', 'w') as f:
+            with open('private_config.ini', 'w') as f:
                 config.write(f)
 
     #创建新的窗口，即gpt聊天框
@@ -154,7 +154,7 @@ class DesktopPet(QWidget):
             self.config.set('Pet', 'PET_ICON', new_icon_path)
 
             # 保存修改后的配置文件
-            with open('config.ini', 'w') as f:
+            with open('private_config.ini', 'w') as f:
                 config.write(f)
     
     # 宠物移动相关
@@ -245,8 +245,8 @@ class DesktopPet(QWidget):
         layout.addWidget(walk_checkbox)
         self.config.set('Pet', 'RANDOM_WALK', str(walk_checkbox.isChecked()))
         # 保存修改后的配置文件
-        with open('config.ini', 'w') as f:
-            self.config.write(f)
+        with open('private_config.ini', 'w') as f:
+            config.write(f)
         
         random_question_checkbox = QCheckBox("是否随机提问", self)
         random_question_checkbox.setChecked(self.stop_timer.isActive())
@@ -254,8 +254,8 @@ class DesktopPet(QWidget):
         layout.addWidget(random_question_checkbox)
         self.config.set('Pet', 'RANDOM_CHAT', str(random_question_checkbox.isChecked()))
         # 保存修改后的配置文件
-        with open('config.ini', 'w') as f:
-            self.config.write(f)
+        with open('private_config.ini', 'w') as f:
+            config.write(f)
 
         ok_button = QPushButton("确定", self)
         ok_button.clicked.connect(settings_dialog.accept)

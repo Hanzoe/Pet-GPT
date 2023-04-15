@@ -1,13 +1,11 @@
-from PyQt5.QtWidgets import QLabel, QDialog, QVBoxLayout, \
-    QTextEdit, QPushButton, QLineEdit, QHBoxLayout
-from PyQt5.QtCore import Qt, QPoint, QTimer, pyqtSignal
-from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QFrame, QApplication, QDesktopWidget
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, \
+    QTextEdit, QPushButton,  QHBoxLayout, QComboBox, QPlainTextEdit, QMainWindow,  QFrame, QDesktopWidget
+from PyQt5.QtCore import Qt, pyqtSignal, QThread, QEvent
 from .openai_api import OpenAI_API
-from PyQt5.QtCore import QThread
 from PyQt5.QtGui import QKeyEvent
 import datetime
 import os
-from PyQt5.QtWidgets import QSplitter, QVBoxLayout, QPushButton, QComboBox
+import sys
 
 class ChatWindow(QMainWindow):
     chat_window_closed = pyqtSignal()
@@ -17,15 +15,64 @@ class ChatWindow(QMainWindow):
 
         self.setWindowTitle(f'与{config["Pet"]["NICKNAME"]}聊天')
         
+         # 创建侧边栏
+        side_bar = QVBoxLayout()
+        side_bar.setAlignment(Qt.AlignTop)
+
+
+        #在这里自定义常规按钮
+
+        #新建常规按钮格式
+        #xxxx_button = QPushButton("xxxx")
+        #xxxx_button.clicked.connect(self.xxxx_slot)
+        #side_bar.addWidget(xxxx_button)
+        #之后去后面定义xxxx_slot
+
+        english_button = QPushButton("英语润色")
+        english_button.clicked.connect(self.english_button_slot)
+        side_bar.addWidget(english_button)
+
+        python_button = QPushButton("python编译器")
+        python_button.clicked.connect(self.python_slot)
+        side_bar.addWidget(python_button)
+
+        text_adventure_button = QPushButton("文字冒险")
+        text_adventure_button.clicked.connect(self.text_adventure)
+        side_bar.addWidget(text_adventure_button)
+
+
+        #在这里自定义下拉组件按钮
+
+        #新建常规下拉组件格式
+        #custom_dropdown.addItem("自定义选项 1")
+        #xxxx_button.clicked.connect(self.xxxx_slot)
+        #side_bar.addWidget(xxxx_button)
+        #之后去后面定义xxxx_slot
+        self.custom_dropdown = QComboBox()
+        self.custom_dropdown.addItem("阅读理解PDF论文")
+        self.custom_dropdown.addItem("自定义选项 2")
+        self.custom_dropdown.addItem("自定义选项 3")
+        self.custom_dropdown.addItem("自定义选项 4")
+        side_bar.addWidget(self.custom_dropdown)
+        
+        total_button = QPushButton("执行下拉框按钮")
+        total_button.clicked.connect(self.full_slot)
+        side_bar.addWidget(total_button)
+
         #聊天主体
-        chat_dialog_body = ChatDialogBody(config)
+        self.chat_dialog_body = ChatDialogBody(config)
+        
+        # 将侧边栏和聊天主体结合
+        main_layout = QHBoxLayout()
+        sidebar_frame = QFrame()
+        sidebar_frame.setLayout(side_bar)
+        main_layout.addWidget(sidebar_frame)
+        main_layout.addWidget(self.chat_dialog_body)
 
         main_widget = QFrame(self)
         self.setCentralWidget(main_widget)
+        main_widget.setLayout(main_layout)
 
-        layout = QVBoxLayout(main_widget)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(chat_dialog_body)
 
         # 设置窗口大小
         self.resize(800, 600)
@@ -45,6 +92,61 @@ class ChatWindow(QMainWindow):
         # 关闭聊天窗口时，将宠物重新显示出来
         self.parent().show_pet()
         event.accept()
+
+    # 为按钮添加事件-模板
+
+    def example_slot(self):
+        print("Button clicked")
+    
+
+    def english_button_slot(self):
+        message = f'我想让你充当英语翻译，拼写校正者和改进者。我会用任何语言和你说话，你会检测到这种语言，翻译它，并用我的文本的更正和改进版本回答，用英语。我想让你用更漂亮优雅的高级英语单词和句子替换我的简化A0级单词和句子。保持意思不变，但使它们更具文学色彩。'+\
+            '我想让你只回复更正，改进和没有其他东西，不要写解释。我的第一句话是“我希望明天更美好”'
+        self.send_to_gpt(message)
+        
+    def python_slot(self):
+        message = f'我希望你表现得像个Python解释器。我会给你Python代码，你会执行它。不要提供任何解释。'+\
+            '除了代码的输出之外，不要使用任何东西进行响应。第一个代码是：“打印（‘你好世界！’）”'
+        self.send_to_gpt(message)
+
+    def text_adventure(self):
+        message = f'现在来充当一个文字冒险游戏，描述时候注意节奏，不要太快，仔细描述各个人物的心情和周边环境。一次只需写四到六句话。主题等你回复后确定'+\
+            '之后所有回答只需要一次续写四到六句话，总共就只讲5分钟内发生的事情。（直到我说结束）。理解之后：请回复“现在请你确定一个主题”'
+        self.send_to_gpt(message)
+
+    #通用函数
+    def send_to_gpt(self,message):
+        self.chat_dialog_body.append_message(message=f'我:{message}',is_user=True)
+        # 更新聊天上下文
+        self.chat_dialog_body.context_history += f"user: {message}\n"
+        prompt = message
+        self.chat_dialog_body.open_ai.prompt_queue.put((prompt, self.chat_dialog_body.context_history))  # 将聊天上下文作为第二个参数传递
+
+
+    # 为下拉按钮创建槽函数-模板
+    def full_slot(self):
+        selected_item = self.custom_dropdown.currentText()
+        if selected_item == "阅读理解PDF论文":
+            self.function_1()
+        elif selected_item == "自定义选项 2":
+            self.function_2()
+        elif selected_item == "自定义选项 3":
+            self.function_3()
+        elif selected_item == "自定义选项 4":
+            self.function_4()
+
+    def function_1(self):
+        from .function.理解PDF文档内容 import 理解PDF文档内容标准文件输入
+        理解PDF文档内容标准文件输入(self.chat_dialog_body)
+
+    def function_2(self):
+        print("我是2号")
+
+    def function_3(self):
+        print("我是3号")
+
+    def function_4(self):
+        print("我是4号")
 
 class ChatDialogBody(QDialog):
     def __init__(self, config, parent=None):
@@ -81,9 +183,11 @@ class ChatDialogBody(QDialog):
         layout.addWidget(self.chat_history)
         
         chat_input_layout = QHBoxLayout()
-        self.message_input = QLineEdit()
+        self.message_input = QPlainTextEdit()
         self.message_input.setPlaceholderText("Send a message...")
-        self.message_input.returnPressed.connect(self.send_message)
+        self.message_input.setLineWrapMode(QPlainTextEdit.WidgetWidth)
+        self.message_input.setFixedHeight(50)
+        self.message_input.installEventFilter(self)
         chat_input_layout.addWidget(self.message_input, stretch=2)
 
         send_button = QPushButton('发送', self)
@@ -126,6 +230,17 @@ class ChatDialogBody(QDialog):
         """)
 
 
+    def eventFilter(self, source, event):
+        if source == self.message_input and event.type() == QEvent.KeyPress:
+            key_event = QKeyEvent(event)
+            if key_event.key() == Qt.Key_Return or key_event.key() == Qt.Key_Enter:
+                if key_event.modifiers() & Qt.ShiftModifier:
+                    self.message_input.insertPlainText("\n")
+                else:
+                    self.send_message()
+                return True
+        return super().eventFilter(source, event)
+
     #用来区别身份的聊天记录
     def append_message(self, message, is_user=False):
         """
@@ -137,7 +252,7 @@ class ChatDialogBody(QDialog):
         
     #按下发送按钮后的事件
     def send_message(self):
-        message = self.message_input.text()
+        message = self.message_input.toPlainText()
         if message:
             self.append_message(message=f'我:{message}',is_user=True)
             # 更新聊天上下文
@@ -148,6 +263,15 @@ class ChatDialogBody(QDialog):
 
             # 保存聊天记录到本地
             self.save_chat_history()
+
+    def keyPressEvent(self, event: QKeyEvent):
+        if event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
+            if event.modifiers() & Qt.ShiftModifier:
+                self.message_input.insertPlainText("\n")
+            else:
+                self.send_message()
+        else:
+            super().keyPressEvent(event)
 
     def handle_response(self, response, prompt):
         if response and 'choices' in response:
@@ -163,7 +287,7 @@ class ChatDialogBody(QDialog):
         self.save_chat_history()
 
     def save_chat_history(self):
-        with open(self.chat_log_file, "a", encoding="utf-8") as f:
+        with open(self.chat_log_file, "w", encoding="utf-8") as f:
             f.write(self.chat_history.toPlainText())
         print(f"聊天记录已保存到 {os.path.abspath(self.chat_log_file)}")
 
