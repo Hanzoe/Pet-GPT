@@ -1,8 +1,0 @@
-fitz
-requests
-json
-PyQt5
-tiktoken
-frontend
-pymupdf
-colorama
