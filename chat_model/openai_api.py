@@ -43,25 +43,32 @@ class OpenAI_API(QThread):
 
     def run(self):
         while True:
-            prompt = self.prompt_queue.get()
-            self._generate_response(prompt)
-            time.sleep(0.1)  # Add a sleep time after processing one request
+            prompt, context = self.prompt_queue.get()  # 从队列中获取 prompt 和 context
+            self._generate_response(prompt, context)
+            time.sleep(0.1)
 
-    def _generate_response(self, prompt):
+    def _generate_response(self, prompt, context):
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.api_key}",
         }
 
-        # Add messages structure for OpenAI API
-        messages = [
-            {"role": "system", "content": "You are an AI language model."},
-            {"role": "user", "content": prompt},
-        ]
+        # 添加带有上下文的消息结构
+        messages = [{"role": "system", "content": "You are an AI language model."}]
+
+        # 在发送的消息中包含上下文
+        if context:
+            for msg in context.split('\n'):
+                if not msg.strip():
+                    continue
+                role, content = msg.split(': ', 1)
+                messages.append({"role": role.lower(), "content": content.strip()})
+
+        messages.append({"role": "user", "content": prompt})
 
         data = {
             "model": self.llm_model,
-            "messages": messages,  # Use messages instead of prompt
+            "messages": messages,
             "temperature": self.temperature,
             "top_p": self.top_p,
             "max_tokens": self.max_tokens,

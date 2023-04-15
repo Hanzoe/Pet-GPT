@@ -273,10 +273,20 @@ class DesktopPet(QWidget):
 
 
     def toggle_random_question(self, state):
-        if state == Qt.Checked:
+        if state == Qt.Checked and self.isHidden():
             self.stop_timer.start()
         else:
             self.stop_timer.stop()
+    
+    def show_pet(self):
+        self.show()
+        if self.stop_timer.isActive():
+            self.bubble.show()
+
+    def hide_pet(self):
+        self.hide()
+        self.bubble.hide()
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

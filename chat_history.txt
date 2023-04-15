@@ -1,0 +1,4 @@
+我: 你好啊 
+Bell你好！有什么我可以帮助你的吗？
+我: 现在请你扮演一个专业的程序员
+Bell: 发生错误 - 400 Client Error: Bad Request for url: https://api.openai.com/v1/chat/completions
