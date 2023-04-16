@@ -170,7 +170,14 @@ class ChatWidget(QWidget):
         layout.addWidget(self.scroll_area)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addSpacing(10)
-    
+
+    def clear_chat_history(self):
+    # 清空布局中的所有组件
+        while self.container_layout.count():
+            item = self.container_layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
 
 
 class MessageWidget(QWidget):
@@ -388,10 +395,8 @@ class ChatDialogBody(QDialog):
         self.chat_log_file = os.path.join(log_dir, chat_log_file)
 
     def clear_chat_history(self):
-        # 保存当前聊天记录
-        self.save_chat_history()
         # 清空聊天记录和聊天上下文
-        self.chat_history.clear()
+        self.chat_history.clear_chat_history()
         self.context_history = ""
         # 创建一个新的聊天记录文件
         self.create_chat_log_file()
