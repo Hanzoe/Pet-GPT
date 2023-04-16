@@ -87,35 +87,3 @@ class OpenAI_API(QThread):
             result = {"error": str(e)}
         self.response_received.emit(result, prompt)
 
-    def send_request(self, prompt):
-        if not prompt:
-            return
-
-        # Add messages structure for OpenAI API
-        messages = [
-            {"role": "system", "content": "You are an AI language model."},
-            {"role": "user", "content": prompt},
-        ]
-
-        data = {
-            "model": self.llm_model,
-            "messages": messages,  # Use messages instead of prompt
-            "temperature": self.temperature,
-            "top_p": self.top_p,
-            "max_tokens": self.max_tokens,
-        }
-
-        try:
-            response = requests.post(
-                self.endpoint,
-                headers=self.headers,
-                data=json.dumps(data),
-                timeout=20,
-                proxies=self.proxies,
-            )
-            response.raise_for_status()
-            return response.json()
-        except Exception as e:
-            self.response_received.emit(None, prompt)
-            self.error_signal.emit(f"{self.config['Pet']['NICKNAME']}: 发生错误 - {str(e)}")
-
