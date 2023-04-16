@@ -1,8 +1,7 @@
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QSizePolicy,\
     QTextEdit, QPushButton,  QHBoxLayout, QComboBox, QPlainTextEdit, QMainWindow,  QFrame, QDesktopWidget, QLabel, QWidget, QScrollArea, QGridLayout, QSpacerItem
 from PyQt5.QtCore import Qt, pyqtSignal, QThread, QEvent, QSize, QTimer
-from .openai_api import OpenAI_API
-from PyQt5.QtGui import QKeyEvent, QPixmap, QFontMetrics
+from PyQt5.QtGui import QKeyEvent
 import datetime
 import os
 import re
@@ -10,7 +9,6 @@ import time
 
 import tiktoken
 import numpy as np
-import traceback
 from .openai_request import OpenAI_request
 from .chat_windows import MessageWidget, ChatWidget
 

@@ -1,11 +1,7 @@
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QSizePolicy,\
     QTextEdit, QPushButton,  QHBoxLayout, QComboBox, QPlainTextEdit, QMainWindow,  QFrame, QDesktopWidget, QLabel,QWidget, QScrollArea, QGridLayout, QSpacerItem
 from PyQt5.QtCore import Qt, pyqtSignal, QThread, QEvent, QSize, QTimer
-from .openai_api import OpenAI_API
 from PyQt5.QtGui import QKeyEvent, QPixmap, QFontMetrics
-import datetime
-import os
-import sys
 
 #聊天框的主体部分，展示相关
 class ChatWidget(QWidget):
