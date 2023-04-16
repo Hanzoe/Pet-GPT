@@ -7,6 +7,7 @@ Pet-GPT 是一个使用 PyQt 编写的桌面宠物程序，支持调用 OpenAI �
 <div>
   <img src="https://user-images.githubusercontent.com/46673445/232178202-3e4a7558-be9a-4708-b6e4-a8baff0080af.png" alt="dog" width="200" style="display: inline-block;">
   <img src="https://user-images.githubusercontent.com/46673445/232195799-c33cfe5c-1dd5-49bb-bc2e-bdc66a61859f.png" alt="cat" width="200" style="display: inline-block;">
+  <img src="https://user-images.githubusercontent.com/46673445/232278236-d8665b48-74d9-4103-8cd1-7e7411bf362b.gif" alt="basheng" width="200" style="display: inline-block;">
 </div>
 
 bilibili连接
