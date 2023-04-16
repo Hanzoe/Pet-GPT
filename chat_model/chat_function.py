@@ -63,14 +63,19 @@ class ChatDialogBody(QDialog):
         chat_input_layout.addWidget(self.message_input, stretch=2)
 
         # 发送按钮
-        send_button = QPushButton('发送', self)
-        send_button.clicked.connect(self.send_message)
-        chat_input_layout.addWidget(send_button, stretch=1)
+        # send_button = QPushButton('发送', self)
+        # send_button.clicked.connect(self.send_message)
+        # chat_input_layout.addWidget(send_button, stretch=1)
+
+        self.send_button = QPushButton('发送', self)
+        self.send_button.clicked.connect(self.send_message)
+        chat_input_layout.addWidget(self.send_button, stretch=1)
 
         # 添加清空聊天按钮
         clear_button = QPushButton('清空聊天', self)
         clear_button.clicked.connect(self.clear_chat_history)
         chat_input_layout.addWidget(clear_button, stretch=1)
+        
 
         layout.addLayout(chat_input_layout)
 
@@ -111,7 +116,7 @@ class ChatDialogBody(QDialog):
                     self.send_message()
                 return True
         return super().eventFilter(source, event)
-
+    
     # 聊天记录组件增加信息的统一模块
     def add_message(self, role, text):
         # 封装成组件
@@ -156,30 +161,14 @@ class ChatDialogBody(QDialog):
         role = "user"
         if text:
             self.add_message(role, text)
+            # 禁用输入框和发送按钮
+            self.message_input.setEnabled(False)
+            self.send_button.setEnabled(False)
             # 用户反馈
-            #用来清除的代码
-            # self.system_message_index = self.add_message("system", "请求中...")
-            # self.add_message("system", "请求中...")
-            # 更新聊天上下文
             self.context_history[0].append(text)
-            # 将聊天上下文作为第二个参数传递给openai
-            # 系统角色
             sys_prompt = "You are an AI language model."
             self.open_ai.prompt_queue.put((text, self.context_history, sys_prompt))
-            # gpt_resp = self.get_response_from_gpt(text)
-            # self.context_history += f"assistant: {gpt_resp}\n"
-            # 清除输入框
             self.message_input.clear()
-
-    # 监听键盘事件
-    def keyPressEvent(self, event: QKeyEvent):
-        if event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
-            if event.modifiers() & Qt.ShiftModifier:
-                self.message_input.insertPlainText("\n")
-            else:
-                self.send_message()
-        else:
-            super().keyPressEvent(event)
 
     # 处理gpt的返回数据
     def handle_response(self, response):
@@ -188,6 +177,9 @@ class ChatDialogBody(QDialog):
             self.remove_message_at_index(self.system_message_index)
             self.system_message_index = -1
         self.add_message("pet", response)
+        # 启用输入框和发送按钮
+        self.message_input.setEnabled(True)
+        self.send_button.setEnabled(True)
 
     # 保存聊天记录
     def save_chat_history(self, message):
@@ -221,61 +213,4 @@ class ChatDialogBody(QDialog):
 
         # 发送 chat_window_closed 信号
         self.parent().chat_window_closed.emit()
-
-    # 减少当前请求
-    def get_reduce_token_percent(self, text):
-        """
-            * 此函数未来将被弃用
-        """
-        try:
-            # text = "maximum context length is 4097 tokens. However, your messages resulted in 4870 tokens"
-            pattern = r"(\d+)\s+tokens\b"
-            match = re.findall(pattern, text)
-            EXCEED_ALLO = 500  # 稍微留一点余地，否则在回复时会因余量太少出问题
-            max_limit = float(match[0]) - EXCEED_ALLO
-            current_tokens = float(match[1])
-            ratio = max_limit/current_tokens
-            assert ratio > 0 and ratio < 1
-            return ratio, str(int(current_tokens-max_limit))
-        except:
-            return 0.5, '不详'
-
-    #命令过长时，进行剪切
-    def input_clipping(self, inputs, history, max_token_limit):
-
-        enc = tiktoken.encoding_for_model(self.config["OpenAI"]["LLM_MODEL"])
-
-        def get_token_num(txt): return len(
-            enc.encode(txt, disallowed_special=()))
-
-        mode = 'input-and-history'
-        # 当 输入部分的token占比 小于 全文的一半时，只裁剪历史
-        input_token_num = get_token_num(inputs)
-        if input_token_num < max_token_limit//2:
-            mode = 'only-history'
-            max_token_limit = max_token_limit - input_token_num
-
-        everything = [inputs] if mode == 'input-and-history' else ['']
-        everything.extend(history)
-        n_token = get_token_num('\n'.join(everything))
-        everything_token = [get_token_num(e) for e in everything]
-        delta = max(everything_token) // 16  # 截断时的颗粒度
-
-        while n_token > max_token_limit:
-            where = np.argmax(everything_token)
-            encoded = enc.encode(everything[where], disallowed_special=())
-            clipped_encoded = encoded[:len(encoded)-delta]
-            # -1 to remove the may-be illegal char
-            everything[where] = enc.decode(clipped_encoded)[:-1]
-            everything_token[where] = get_token_num(everything[where])
-            n_token = get_token_num('\n'.join(everything))
-
-        if mode == 'input-and-history':
-            inputs = everything[0]
-        else:
-            pass
-        history = everything[1:]
-        return inputs, history
-
-
 

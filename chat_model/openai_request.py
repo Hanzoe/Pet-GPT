@@ -39,7 +39,7 @@ class OpenAI_request(QThread):
         while True:
             prompt, context, sys_promtp = self.prompt_queue.get()  # 从队列中获取 prompt 和 context
             self.get_response_from_gpt(inputs=prompt, history=context,sys_prompt=sys_promtp)
-            time.sleep(0.1)
+            # time.sleep(0.1)
 
     def get_full_error(self, chunk, stream_response):
         """
@@ -57,9 +57,8 @@ class OpenAI_request(QThread):
                               handle_token_exceed=True,retry_times_at_unknown_error=2,):
         # 多线程的时候，需要一个mutable结构在不同线程之间传递信息
         # list就是最简单的mutable结构，我们第一个位置放gpt输出，第二个位置传递报错信息
-        self.mutable = [None, '']
 
-        executor = ThreadPoolExecutor(max_workers=16)
+        # executor = ThreadPoolExecutor(max_workers=16)
         mutable = ["", time.time()]
 
         def _req_gpt(inputs, history, sys_prompt):
@@ -67,8 +66,8 @@ class OpenAI_request(QThread):
             exceeded_cnt = 0
             while True:
                 # watchdog error
-                if len(mutable) >= 2 and (time.time()-mutable[1]) > 5:
-                    raise RuntimeError("检测到程序终止。")
+                # if len(mutable) >= 2 and (time.time()-mutable[1]) > 5:
+                #     raise RuntimeError("检测到程序终止。")
                 try:
                     # 【第一种情况】：顺利完成
                     result = self.gpt_stream_connection(
@@ -93,7 +92,7 @@ class OpenAI_request(QThread):
                         tb_str = '```\n' + traceback.format_exc() + '```'
                         mutable[0] += f"[Local Message] 警告，在执行过程中遭遇问题, Traceback：\n\n{tb_str}\n\n"
                         return mutable[0]  # 放弃
-                except:
+                except Exception as e:
                     # 【第三种情况】：其他错误：重试几次
                     tb_str = '```\n' + traceback.format_exc() + '```'
                     print(tb_str)
@@ -110,11 +109,13 @@ class OpenAI_request(QThread):
                         return mutable[0]  # 放弃
 
         # 提交任务
-        future = executor.submit(_req_gpt, inputs, history, sys_prompt)
-        while True:
-            if future.done():
-                break
-        final_result = future.result()
+        # future = executor.submit(_req_gpt, inputs, history, sys_prompt)
+
+        # while True:
+        #     if future.done():
+        #         break
+        # final_result = future.result()
+        final_result = _req_gpt(inputs, history, sys_prompt)
         self.response_received.emit(final_result)
     
     def gpt_stream_connection(self, inputs, history, sys_prompt):
