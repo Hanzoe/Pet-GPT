@@ -1,2 +1,4 @@
 /.vscode
 /private_config.ini
+__pycache__
+myvenv
