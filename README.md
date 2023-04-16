@@ -140,7 +140,7 @@ python解释器 | 模拟python，直接执行命令
 
 一个人也许走的很快，但是一群人可以走得更远！
 
-QQ:2500066889
+![image](https://user-images.githubusercontent.com/46673445/232263608-c2f4982f-292e-41bd-b646-96a1140f22ee.png)
 
 ## 参考
 1. https://github.com/f/awesome-chatgpt-prompts（获取prompts命令）
