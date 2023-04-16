@@ -183,10 +183,10 @@ class DesktopPet(QWidget):
     #         self.timer.start()
 
     def set_new_timers(self):
-        stop_time = random.randint(2000, 5000)  # 生成一个2~5秒的随机数，作为移动时间
+        stop_time = random.randint(10000, 20000)  # 生成一个2~5秒的随机数，作为移动时间
         self.stop_timer.start(stop_time)
 
-        movement_time = random.randint(2000, 5000)  # 生成一个2~5秒的随机数，作为移动时间
+        movement_time = random.randint(10000, 20000)  # 生成一个2~5秒的随机数，作为移动时间
         self.movement_timer.start(movement_time)
 
         # 如果停止时间到了，则展示一句话
@@ -237,8 +237,10 @@ class DesktopPet(QWidget):
             return
         self.bubble.setText(text)
         self.bubble.adjustSize()
-        global_position = self.mapToGlobal(QPoint(self.pet_pixmap.width(), 0))
+        global_position = self.mapToGlobal(QPoint(self.pet_label.width(), 0))
         self.bubble.move(global_position.x(), global_position.y() - self.bubble.height())
+        # 将气泡框置于最底层
+        self.bubble.lower()
         self.bubble.show()
         QTimer.singleShot(3000, self.bubble.hide)
 
@@ -336,9 +338,6 @@ class DesktopPet(QWidget):
         # 保存修改后的配置文件
         self.save_config()
 
-
-        
-
     def toggle_random_question(self, state):
         if state == Qt.Checked and not self.isHidden():
             self.stop_timer.start()
@@ -346,12 +345,12 @@ class DesktopPet(QWidget):
             self.stop_timer.stop()
     
     def show_pet(self):
-        self.show()
+        # self.show()
         if self.stop_timer.isActive():
             self.bubble.show()
 
     def hide_pet(self):
-        self.hide()
+        # self.hide()
         self.bubble.hide()
 
     def save_config(self):
