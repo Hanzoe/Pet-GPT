@@ -4,7 +4,7 @@ from PyQt5.QtGui import QIcon, QPixmap, QPainter, QBrush, QMovie
 from PyQt5.QtWidgets import QApplication, QWidget, QMenu, QAction, QLabel, QGraphicsDropShadowEffect, QFileDialog, QDialog, QVBoxLayout, \
     QTextEdit, QPushButton, QLineEdit, QHBoxLayout, QInputDialog, QDesktopWidget, QCheckBox
 
-from chat_model.chatdialog import  ChatWindow
+from chat_model.chat_main_windows import ChatWindow
 
 import configparser
 import random
