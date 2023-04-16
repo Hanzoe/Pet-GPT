@@ -145,3 +145,7 @@ QQ:2500066889
 1. https://github.com/f/awesome-chatgpt-prompts（获取prompts命令）
 2. https://github.com/tommyli3318/desktop-pet（想做桌面宠物版的）
 3. https://github.com/binary-husky/chatgpt_academic（曾经在这上面做插件奉献，从而得到灵感）
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=Hanzoe/Pet-GPT&type=Date)](https://star-history.com/#Hanzoe/Pet-GPT&Date)
