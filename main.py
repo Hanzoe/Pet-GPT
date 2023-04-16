@@ -1,6 +1,6 @@
 import sys
-from PyQt5.QtCore import Qt, QPoint, QTimer
-from PyQt5.QtGui import QIcon, QPixmap, QPainter, QBrush
+from PyQt5.QtCore import Qt, QPoint, QTimer, QSize
+from PyQt5.QtGui import QIcon, QPixmap, QPainter, QBrush, QMovie
 from PyQt5.QtWidgets import QApplication, QWidget, QMenu, QAction, QLabel, QGraphicsDropShadowEffect, QFileDialog, QDialog, QVBoxLayout, \
     QTextEdit, QPushButton, QLineEdit, QHBoxLayout, QInputDialog, QDesktopWidget, QCheckBox
 
@@ -8,6 +8,9 @@ from chat_model.chatdialog import  ChatWindow
 
 import configparser
 import random
+from PIL import Image
+import codecs
+import configparser
 
 #桌面宠物的类
 class DesktopPet(QWidget):
@@ -42,15 +45,32 @@ class DesktopPet(QWidget):
         #父容器
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.SubWindow)
         self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setFixedSize(256,256)
+        self.pet_width = self.config.getint("Pet", "WIDTH")
+        self.pet_height = self.config.getint("Pet", "HEIGHT")
+        self.setFixedSize(self.pet_width+20,self.pet_height+20)
         screen_geometry = QApplication.desktop().availableGeometry()
         self.move(screen_geometry.width() - self.width()-500, screen_geometry.height() - self.height()-100)
 
+        
+
         #宠物信息
-        self.pet_icon = QIcon(self.config["Pet"]["PET_ICON"])
-        self.pet_pixmap = self.pet_icon.pixmap(256,256)
+        self.pet_movie = QMovie(self.config["Pet"]["PET_ICON"])
+        self.pet_movie.setScaledSize(QSize(self.pet_width, self.pet_height))
+        self.pet_label = QLabel(self)
+        self.pet_label.setMovie(self.pet_movie)
+        self.pet_movie.start()
         self.nickname = self.config["Pet"]["NICKNAME"]
 
+
+        # 创建一个布局管理器
+        layout = QVBoxLayout(self)
+        # 将 QLabel 添加到布局管理器中
+        layout.addWidget(self.pet_label)
+        # 设置布局管理器中的对齐方式，以让 QLabel 在中心显示
+        layout.setAlignment(Qt.AlignCenter)
+        # 将布局管理器设置为父容器的布局
+        self.setLayout(layout)
+        
         #右键功能区，可以自定义（擅长的朋友）
         self.menu = QMenu(self)
         #调用gpt聊天框
@@ -70,8 +90,8 @@ class DesktopPet(QWidget):
         #随机发起对话功能的气泡框
         self.bubble = QLabel(self.parent())
         self.bubble.setWindowFlags(Qt.SplashScreen)
-        pet_width = self.pet_pixmap.width()
-        pet_height = self.pet_pixmap.height()
+        pet_width = self.pet_width
+        pet_height = self.pet_height
         self.bubble.setGeometry(pet_width, -60, 200, 50)
         self.bubble.setStyleSheet("background-color: white; border-radius: 10px; padding: 5px;")
         self.bubble.hide()
@@ -102,8 +122,7 @@ class DesktopPet(QWidget):
             # 修改配置项
             self.config.set('Pet', 'NICKNAME', new_nickname)
             # 保存修改后的配置文件
-            with open('private_config.ini', 'w') as f:
-                config.write(f)
+            self.save_config()
 
     #创建新的窗口，即gpt聊天框
     def show_chat_dialog(self):
@@ -115,13 +134,6 @@ class DesktopPet(QWidget):
         if hasattr(self, 'chat_dialog') and self.chat_dialog.isVisible():
             dialog_position = self.mapToGlobal(QPoint(self.pet_pixmap.width() // 2, -self.chat_dialog.height()))
             self.chat_dialog.move(dialog_position)
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setRenderHint(QPainter.SmoothPixmapTransform)
-        painter.drawPixmap(0, 0, self.pet_pixmap)
-        painter.end()
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
@@ -141,21 +153,25 @@ class DesktopPet(QWidget):
         self.menu.exec_(event.globalPos())
 
     #修改图标路径
+    # 修改图标路径
     def change_icon(self):
         # 请在此处添加选择图标的逻辑，可以使用 QFileDialog 获取文件路径
         options = QFileDialog.Options()
         options |= QFileDialog.ReadOnly
-        new_icon_path, _ = QFileDialog.getOpenFileName(self, "选择新图标", "", "Images (*.png *.xpm *.jpg *.bmp);;All Files (*)", options=options)
+        new_icon_path, _ = QFileDialog.getOpenFileName(self, "选择新图标", "", "Images (*.png *.xpm *.jpg *.bmp, *.gif);;All Files (*)", options=options)
         if new_icon_path:
-            self.pet_icon = QIcon(new_icon_path)
-            self.pet_pixmap = self.pet_icon.pixmap(128, 128)
-            self.update()
+            self.pet_movie.stop()  # 停止动画
+            # 替换影片
+            self.pet_movie.setFileName(new_icon_path)
+            # 获取图片尺寸
+            self.pet_movie.setScaledSize(QSize(self.pet_width, self.pet_height))
+            # 开始播放影片
+            self.pet_movie.start()
             # 修改配置项
             self.config.set('Pet', 'PET_ICON', new_icon_path)
-
             # 保存修改后的配置文件
-            with open('private_config.ini', 'w') as f:
-                config.write(f)
+            self.save_config()
+
     
     # 宠物移动相关
     # def enterEvent(self, event):
@@ -237,6 +253,10 @@ class DesktopPet(QWidget):
         settings_dialog.setWindowTitle("设置")
         settings_dialog.setFixedSize(300, 150)
 
+        screen_geometry = QApplication.desktop().availableGeometry()
+        screen_center = screen_geometry.center()
+        settings_dialog.move(screen_center.x() - settings_dialog.width() // 2, screen_center.y() - settings_dialog.height() // 2)
+
         layout = QVBoxLayout()
 
         walk_checkbox = QCheckBox("是否自由走动", self)
@@ -245,8 +265,7 @@ class DesktopPet(QWidget):
         layout.addWidget(walk_checkbox)
         self.config.set('Pet', 'RANDOM_WALK', str(walk_checkbox.isChecked()))
         # 保存修改后的配置文件
-        with open('private_config.ini', 'w') as f:
-            config.write(f)
+        self.save_config()
         
         random_question_checkbox = QCheckBox("是否随机提问", self)
         random_question_checkbox.setChecked(self.stop_timer.isActive())
@@ -254,13 +273,17 @@ class DesktopPet(QWidget):
         layout.addWidget(random_question_checkbox)
         self.config.set('Pet', 'RANDOM_CHAT', str(random_question_checkbox.isChecked()))
         # 保存修改后的配置文件
-        with open('private_config.ini', 'w') as f:
-            config.write(f)
+        self.save_config()
+
+        change_size_button = QPushButton("调整大小", self)
+        change_size_button.clicked.connect(self.change_size)
+        layout.addWidget(change_size_button)
 
         ok_button = QPushButton("确定", self)
         ok_button.clicked.connect(settings_dialog.accept)
         layout.addWidget(ok_button)
 
+        
         settings_dialog.setLayout(layout)
         settings_dialog.exec_()
 
@@ -270,7 +293,51 @@ class DesktopPet(QWidget):
             self.timer.start(50)
         else:
             self.timer.stop()
+    
+    def change_size(self):
+        flags = Qt.WindowSystemMenuHint | Qt.WindowTitleHint
 
+        # 宽度输入框
+        width_input_dialog = QInputDialog(self, flags)
+        width_input_dialog.setWindowTitle("调整宽度")
+        width_input_dialog.setLabelText("请输入新的宽度：")
+        width_input_dialog.setIntRange(10, 500)
+        width_input_dialog.setIntValue(self.pet_width)
+        width_input_dialog.finished.connect(lambda: width_input_dialog.deleteLater())
+
+        screen_geometry = QApplication.desktop().availableGeometry()
+        screen_center = screen_geometry.center()
+        width_input_dialog.move(screen_center.x() - width_input_dialog.width() // 2, screen_center.y() - width_input_dialog.height() // 2)
+
+        result = width_input_dialog.exec_()
+        if result == QInputDialog.Accepted:
+            new_width = width_input_dialog.intValue()
+            self.pet_width = new_width
+            self.config.set("Pet", "WIDTH", str(new_width))
+
+        # 高度输入框
+        height_input_dialog = QInputDialog(self, flags)
+        height_input_dialog.setWindowTitle("调整高度")
+        height_input_dialog.setLabelText("请输入新的高度：")
+        height_input_dialog.setIntRange(10, 500)
+        height_input_dialog.setIntValue(self.pet_height)
+        height_input_dialog.finished.connect(lambda: height_input_dialog.deleteLater())
+
+        height_input_dialog.move(screen_center.x() - height_input_dialog.width() // 2, screen_center.y() - height_input_dialog.height() // 2)
+
+        result = height_input_dialog.exec_()
+        if result == QInputDialog.Accepted:
+            new_height = height_input_dialog.intValue()
+            self.pet_height = new_height
+            self.config.set("Pet", "HEIGHT", str(new_height))
+
+        self.pet_movie.setScaledSize(QSize(self.pet_width, self.pet_height))
+
+        # 保存修改后的配置文件
+        self.save_config()
+
+
+        
 
     def toggle_random_question(self, state):
         if state == Qt.Checked and not self.isHidden():
@@ -287,11 +354,16 @@ class DesktopPet(QWidget):
         self.hide()
         self.bubble.hide()
 
+    def save_config(self):
+        with codecs.open('private_config.ini', 'w', 'utf-8') as f:
+            self.config.write(f) 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     config = configparser.ConfigParser()
-    with open('private_config.ini', encoding='utf-8') as f:
+    with codecs.open('private_config.ini', 'r', 'utf-8') as f:
+        # 读取配置文件内容
+        config = configparser.ConfigParser()
         config.read_file(f)
     pet = DesktopPet(config)
     sys.exit(app.exec_())
