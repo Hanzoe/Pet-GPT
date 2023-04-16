@@ -29,6 +29,7 @@ python解释器 | 模拟python，直接执行命令
 自定义插件 | 支持开发设计自己的插件
 配置代理服务器 | 支持配置代理服务器
 模块化设计 | 支持自定义高阶的实验性功能与相关代码
+更换宠物图像 | 选择自己喜欢的图像作为展示（虚拟人物、动物都OK）
 …… | ……
 
 ## 安装与运行
@@ -139,7 +140,7 @@ python解释器 | 模拟python，直接执行命令
 
 一个人也许走的很快，但是一群人可以走得更远！
 
-QQ:2500066889
+![image](https://user-images.githubusercontent.com/46673445/232263608-c2f4982f-292e-41bd-b646-96a1140f22ee.png)
 
 ## 参考
 1. https://github.com/f/awesome-chatgpt-prompts（获取prompts命令）
