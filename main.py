@@ -358,7 +358,7 @@ class DesktopPet(QWidget):
             self.config.write(f) 
 
 if __name__ == '__main__':
-    private_config = 'private_config.ini'
+    config_private = 'config_private.ini'
     app = QApplication(sys.argv)
     config = configparser.ConfigParser()
     with codecs.open(private_config, 'r', 'utf-8') as f:
