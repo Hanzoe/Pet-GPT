@@ -1,9 +1,8 @@
 import sys
-from PyQt5.QtCore import Qt, QPoint, QTimer, QSize
-from PyQt5.QtGui import QIcon, QPixmap, QPainter, QBrush, QMovie
+from PyQt5.QtCore import Qt, QPoint, QTimer, QSize, QObject, QMetaObject, pyqtSlot as Slot
+from PyQt5.QtGui import QIcon, QPixmap, QPainter, QBrush, QMovie, QKeyEvent, QKeySequence
 from PyQt5.QtWidgets import QApplication, QWidget, QMenu, QAction, QLabel, QGraphicsDropShadowEffect, QFileDialog, QDialog, QVBoxLayout, \
-    QTextEdit, QPushButton, QLineEdit, QHBoxLayout, QInputDialog, QDesktopWidget, QCheckBox
-
+    QTextEdit, QPushButton, QLineEdit, QHBoxLayout, QInputDialog, QDesktopWidget, QCheckBox, QKeySequenceEdit
 from chat_model.chat_main_windows import ChatWindow
 
 import configparser
@@ -11,13 +10,24 @@ import random
 from PIL import Image
 import codecs
 import configparser
+#全局快捷键
+import keyboard
+import threading
 
 #桌面宠物的类
-class DesktopPet(QWidget):
+class DesktopPet(QWidget, QObject):
     def __init__(self, config):
         super().__init__()
         self.config = config
         self.init_ui()
+
+        self.chat_window_state_changed = False
+
+        # 监听全局快捷键的线程
+        keyboard_listener_thread = threading.Thread(target=self._run_keyboard_listener, daemon=True)
+        keyboard_listener_thread.start()
+        self.toggle_chat_window = self.toggle_chat_window
+
 
         # pet自由移动
         self.timer = QTimer()
@@ -39,6 +49,8 @@ class DesktopPet(QWidget):
         # 根据配置设置是否随机提问
         if self.config.getboolean("Pet", "RANDOM_CHAT"):
             self.set_new_timers()  # 初始化停止时间和移动时间
+        #快捷键监听
+        self.chat_window_open = False
 
     #初始化界面
     def init_ui(self):
@@ -74,7 +86,7 @@ class DesktopPet(QWidget):
         #右键功能区，可以自定义（擅长的朋友）
         self.menu = QMenu(self)
         #调用gpt聊天框
-        chat_action = QAction("聊天", self, triggered=self.show_chat_dialog)
+        chat_action = QAction("聊天", self, triggered=self.toggle_chat_window)
 
         change_icon_action = QAction("更换图标", self, triggered=self.change_icon)
 
@@ -123,11 +135,6 @@ class DesktopPet(QWidget):
             self.config.set('Pet', 'NICKNAME', new_nickname)
             # 保存修改后的配置文件
             self.save_config()
-
-    #创建新的窗口，即gpt聊天框
-    def show_chat_dialog(self):
-        chat_window = ChatWindow(self,self.config)
-        chat_window.show()
     
     #根据鼠标更新对话框位置
     def update_chat_dialog_position(self):
@@ -144,15 +151,10 @@ class DesktopPet(QWidget):
         if event.buttons() == Qt.LeftButton:
             self.move(event.globalPos() - self.drag_position)
             self.update_chat_dialog_position()
-    # def mouseMoveEvent(self, event):
-    #     if event.buttons() == Qt.LeftButton:
-    #         self.move(event.globalPos() - self.drag_position)
-    #         event.accept()
 
     def contextMenuEvent(self, event):
         self.menu.exec_(event.globalPos())
 
-    #修改图标路径
     # 修改图标路径
     def change_icon(self):
         # 请在此处添加选择图标的逻辑，可以使用 QFileDialog 获取文件路径
@@ -172,16 +174,6 @@ class DesktopPet(QWidget):
             # 保存修改后的配置文件
             self.save_config()
 
-    
-    # 宠物移动相关
-    # def enterEvent(self, event):
-    #     if self.config.getboolean("Pet", "RANDOM_WALK"):
-    #         self.timer.stop()
-
-    # def leaveEvent(self, event):
-    #     if self.config.getboolean("Pet", "RANDOM_WALK"):
-    #         self.timer.start()
-
     def set_new_timers(self):
         stop_time = random.randint(10000, 20000)  # 生成一个2~5秒的随机数，作为移动时间
         self.stop_timer.start(stop_time)
@@ -191,7 +183,6 @@ class DesktopPet(QWidget):
 
         # 如果停止时间到了，则展示一句话
         QTimer.singleShot(stop_time, self.random_speak)
-
 
     def restart_movement(self):
         self.stop_timer.stop()
@@ -249,11 +240,12 @@ class DesktopPet(QWidget):
         if self.bubble.isVisible():
             global_position = self.mapToGlobal(QPoint(self.pet_pixmap.width(), 0))
             self.bubble.move(global_position.x(), global_position.y() - self.bubble.height())
+   
     #设置界面
     def show_settings_dialog(self):
         settings_dialog = QDialog(self)
         settings_dialog.setWindowTitle("设置")
-        settings_dialog.setFixedSize(300, 150)
+        settings_dialog.setFixedSize(400, 200)
 
         screen_geometry = QApplication.desktop().availableGeometry()
         screen_center = screen_geometry.center()
@@ -261,33 +253,84 @@ class DesktopPet(QWidget):
 
         layout = QVBoxLayout()
 
-        walk_checkbox = QCheckBox("是否自由走动", self)
-        walk_checkbox.setChecked(self.timer.isActive())
-        walk_checkbox.stateChanged.connect(self.toggle_walk)
-        layout.addWidget(walk_checkbox)
-        self.config.set('Pet', 'RANDOM_WALK', str(walk_checkbox.isChecked()))
-        # 保存修改后的配置文件
-        self.save_config()
-        
-        random_question_checkbox = QCheckBox("是否随机提问", self)
-        random_question_checkbox.setChecked(self.stop_timer.isActive())
-        random_question_checkbox.stateChanged.connect(self.toggle_random_question)
-        layout.addWidget(random_question_checkbox)
-        self.config.set('Pet', 'RANDOM_CHAT', str(random_question_checkbox.isChecked()))
-        # 保存修改后的配置文件
-        self.save_config()
+        self.walk_checkbox = QCheckBox("是否自由走动", self)
+        self.walk_checkbox.setChecked(self.timer.isActive())
+        self.walk_checkbox.stateChanged.connect(self.toggle_walk)
+        layout.addWidget(self.walk_checkbox)
+
+        self.random_question_checkbox = QCheckBox("是否随机提问", self)
+        self.random_question_checkbox.setChecked(self.stop_timer.isActive())
+        self.random_question_checkbox.stateChanged.connect(self.toggle_random_question)
+        layout.addWidget(self.random_question_checkbox)
 
         change_size_button = QPushButton("调整大小", self)
         change_size_button.clicked.connect(self.change_size)
         layout.addWidget(change_size_button)
 
+        openai_key_layout = QHBoxLayout()
+        openai_key_label = QLabel("OpenAI Key:")
+        self.openai_key_input = QLineEdit()
+        self.openai_key_input.setText(self.config.get("OpenAI", "openai_api_key"))
+        openai_key_layout.addWidget(openai_key_label)
+        openai_key_layout.addWidget(self.openai_key_input)
+        layout.addLayout(openai_key_layout)
+
+        chat_window_shortcut_layout = QHBoxLayout()
+        chat_window_shortcut_label = QLabel("Chat Shortcut:")
+        self.chat_window_shortcut_input = QKeySequenceEdit()
+        self.chat_window_shortcut_input.setKeySequence(QKeySequence(self.config.get("Pet", "Shortcuts_CHAT_WINDOW")))
+        chat_window_shortcut_layout.addWidget(chat_window_shortcut_label)
+        chat_window_shortcut_layout.addWidget(self.chat_window_shortcut_input)
+        layout.addLayout(chat_window_shortcut_layout)
+
         ok_button = QPushButton("确定", self)
+        ok_button.clicked.connect(lambda: self.save_all_config(self.walk_checkbox.isChecked(), self.random_question_checkbox.isChecked(), self.openai_key_input.text(), self.chat_window_shortcut_input.keySequence().toString()))
         ok_button.clicked.connect(settings_dialog.accept)
         layout.addWidget(ok_button)
 
-        
         settings_dialog.setLayout(layout)
         settings_dialog.exec_()
+
+    def save_all_config(self, random_walk, random_chat, openai_key, chat_window_shortcut):
+        self.config.set('Pet', 'RANDOM_WALK', str(random_walk))
+        self.config.set('Pet', 'RANDOM_CHAT', str(random_chat))
+
+        self.config.set("OpenAI", "openai_api_key", openai_key)
+
+        self.config.set("Pet", "Shortcuts_CHAT_WINDOW", chat_window_shortcut)
+
+        self.save_config()
+
+    # 快捷键启动窗口
+    def toggle_chat_window(self):
+        if self.chat_window_open:
+            self.chat_window.close()
+            self.chat_window_open = False
+            self.chat_window = None
+            self.chat_window_state_changed = True
+        else:
+            self.chat_window = ChatWindow(self, self.config)
+            self.chat_window.show()
+            self.chat_window_open = True
+            self.chat_window_state_changed = True
+
+
+    #由于keyboard库的add_hotkey函数在主线程中运行，从而阻塞了Qt事件循环导致的。为了解决这个问题，我们可以在一个单独的线程中运行全局快捷键监听器。
+    def _run_keyboard_listener(self):
+        chat_window_shortcut = self.config.get("Pet", "Shortcuts_CHAT_WINDOW")
+        keyboard.add_hotkey(chat_window_shortcut, lambda: QTimer.singleShot(0, pet.toggle_chat_window))
+        keyboard.wait()
+
+    # def keyPressEvent(self, event: QKeyEvent):
+    #     chat_window_shortcut = QKeySequence(self.config.get("Pet", "Shortcuts_CHAT_WINDOW"))
+
+    #     if QKeySequence(event.key() | int(event.modifiers())) == chat_window_shortcut:
+    #         QTimer.singleShot(0, self.toggle_chat_window)
+    #     else:
+    #         super().keyPressEvent(event)
+
+    def set_chat_window_closed(self):
+        self.chat_window_open = False
 
     # 控制宠物自由走动和随机提问功能
     def toggle_walk(self, state):

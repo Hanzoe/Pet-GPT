@@ -206,11 +206,11 @@ class ChatDialogBody(QDialog):
         # 创建一个新的聊天记录文件
         self.create_chat_log_file()
 
-    # 关闭按钮事件
+    # # 关闭按钮事件
     def closeEvent(self, event):
         self.context_history = [[],[]]
         event.accept()
-
-        # 发送 chat_window_closed 信号
-        self.parent().chat_window_closed.emit()
+        # self.parent().closed.connect(self.parent().set_chat_window_closed)
+        # # 发送 chat_window_closed 信号
+        # self.chat_window_closed.emit()
 

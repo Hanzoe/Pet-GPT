@@ -4,13 +4,9 @@ from PyQt5.QtCore import Qt, pyqtSignal, QThread, QEvent, QSize, QTimer
 from .chat_function import ChatDialogBody
 
 class ChatWindow(QMainWindow):
-    chat_window_closed = pyqtSignal()
-
     def __init__(self, parent=None,config="private_config.ini"):
         super().__init__(parent)
-
         self.setWindowTitle(f'与{config["Pet"]["NICKNAME"]}聊天')
-        
          # 创建侧边栏
         side_bar = QVBoxLayout()
         side_bar.setAlignment(Qt.AlignTop)
@@ -79,14 +75,15 @@ class ChatWindow(QMainWindow):
 
         # 将窗口移动到屏幕中心
         self.move(center - self.rect().center())
-        # 新增信号连接
-        self.chat_window_closed.connect(parent.show_pet)
-        # 隐藏宠物
-        parent.hide_pet()
+        # # 新增信号连接
+        
+        # # 隐藏宠物
+        # parent.hide_pet()
 
     def closeEvent(self, event):
-        # 关闭聊天窗口时，将宠物重新显示出来
+    # 关闭聊天窗口时，将宠物重新显示出来
         self.parent().show_pet()
+        self.parent().toggle_chat_window()
         event.accept()
 
     # 为按钮添加事件-模板
