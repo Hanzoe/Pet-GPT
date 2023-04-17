@@ -77,7 +77,6 @@ python解释器 | 模拟python，直接执行命令
 - 右键支持功能：打开聊天框、修改昵称、修改图像、设置移动、对话以及自定义快捷键打开聊天框
   ![image](https://user-images.githubusercontent.com/46673445/232179374-458f6fd5-85d3-41ee-889e-28b98174b240.png)
   ![image](https://user-images.githubusercontent.com/46673445/232290378-ac8f5aaf-41bc-4668-a461-bdb1f81d16c4.png)
-  ![image](https://user-images.githubusercontent.com/46673445/232390509-bfa3564e-130a-4672-ba50-150dc341a004.png)
 
 - 互动状态下，可实现基于GPT的聊天以及其他功能
   ![image](https://user-images.githubusercontent.com/46673445/232196578-0db60c9b-594a-486d-8918-634df3dacd6b.png)
