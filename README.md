@@ -74,16 +74,14 @@ python解释器 | 模拟python，直接执行命令
   ![image](https://user-images.githubusercontent.com/46673445/232290290-11e1233f-bc83-4a74-9beb-37dbf89944d8.png)
 
 
-- 右键支持功能：打开聊天框、修改昵称、修改图像、设置移动以及对话
-
+- 右键支持功能：打开聊天框、修改昵称、修改图像、设置移动、对话以及自定义快捷键打开聊天框
   ![image](https://user-images.githubusercontent.com/46673445/232179374-458f6fd5-85d3-41ee-889e-28b98174b240.png)
   ![image](https://user-images.githubusercontent.com/46673445/232290378-ac8f5aaf-41bc-4668-a461-bdb1f81d16c4.png)
-
+  ![image](https://user-images.githubusercontent.com/46673445/232388631-40c966a9-da13-45ca-8b51-0e1ebed9c49b.png)
 
 - 互动状态下，可实现基于GPT的聊天以及其他功能
   ![image](https://user-images.githubusercontent.com/46673445/232196578-0db60c9b-594a-486d-8918-634df3dacd6b.png)
   ![image](https://user-images.githubusercontent.com/46673445/232290314-5dd7b082-3ec4-4797-8261-01e310ccabc8.png)
-
 
 ## 自定义插件说明
 ### 常规按钮格式
