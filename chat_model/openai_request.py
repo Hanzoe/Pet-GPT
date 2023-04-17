@@ -12,6 +12,8 @@ from concurrent.futures import ThreadPoolExecutor
 # 读取时首先看是否存在私密的config_private配置文件（不受git管控），如果有，则覆盖原config文件
 class OpenAI_request(QThread):
     response_received = pyqtSignal(str)
+    tools_received = pyqtSignal(str)
+
     def __init__(self, config):
         super().__init__()
         self.config = config
@@ -37,8 +39,8 @@ class OpenAI_request(QThread):
     
     def run(self):
         while True:
-            prompt, context, sys_promtp = self.prompt_queue.get()  # 从队列中获取 prompt 和 context
-            self.get_response_from_gpt(inputs=prompt, history=context,sys_prompt=sys_promtp)
+            prompt, context, sys_prompt, tools = self.prompt_queue.get()  # 从队列中获取 prompt 和 context    
+            self.get_response_from_gpt(inputs=prompt, history=context,sys_prompt=sys_prompt ,tools=tools)
             # time.sleep(0.1)
 
     def get_full_error(self, chunk, stream_response):
@@ -54,7 +56,7 @@ class OpenAI_request(QThread):
 
     #获取gpt回复
     def get_response_from_gpt(self, inputs, history, sys_prompt='',
-                              handle_token_exceed=True,retry_times_at_unknown_error=2,):
+                              handle_token_exceed=True,retry_times_at_unknown_error=2,tools=False):
         # 多线程的时候，需要一个mutable结构在不同线程之间传递信息
         # list就是最简单的mutable结构，我们第一个位置放gpt输出，第二个位置传递报错信息
 
@@ -116,7 +118,10 @@ class OpenAI_request(QThread):
         #         break
         # final_result = future.result()
         final_result = _req_gpt(inputs, history, sys_prompt)
-        self.response_received.emit(final_result)
+        if tools:
+            self.tools_received.emit(final_result)
+        else:
+            self.response_received.emit(final_result)
     
     def gpt_stream_connection(self, inputs, history, sys_prompt):
         headers, payload = self.generate_payload(inputs=inputs, system_prompt=sys_prompt, stream=True,history=history)

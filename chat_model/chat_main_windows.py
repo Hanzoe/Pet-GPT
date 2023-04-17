@@ -10,10 +10,8 @@ class ChatWindow(QMainWindow):
          # 创建侧边栏
         side_bar = QVBoxLayout()
         side_bar.setAlignment(Qt.AlignTop)
-
-
-        #在这里自定义常规按钮
-
+        self.config = config
+        #你可以做的:在这里自定义常规按钮
         #新建常规按钮格式
         #xxxx_button = QPushButton("xxxx")
         #xxxx_button.clicked.connect(self.xxxx_slot)
@@ -52,7 +50,7 @@ class ChatWindow(QMainWindow):
         side_bar.addWidget(total_button)
 
         #聊天主体
-        self.chat_dialog_body = ChatDialogBody(config)
+        self.chat_dialog_body = ChatDialogBody(self.config)
         
         # 将侧边栏和聊天主体结合
         main_layout = QHBoxLayout()
@@ -69,7 +67,7 @@ class ChatWindow(QMainWindow):
         # 设置窗口大小
         self.resize(800, 600)
 
-        # 获取屏幕中心点
+        # 获取屏幕中心点chat_model/chat_main_windows.py
         screen = QDesktopWidget().screenGeometry()
         center = screen.center()
 
@@ -113,13 +111,13 @@ class ChatWindow(QMainWindow):
         # 更新历史上下文
         self.chat_dialog_body.context_history[2].append(message)
         prompt = message
-        self.chat_dialog_body.open_ai.prompt_queue.put((prompt, self.chat_dialog_body.context_history,message))  # 将聊天上下文作为第二个参数传递
+        self.chat_dialog_body.open_ai.prompt_queue.put((prompt, self.chat_dialog_body.context_history,message,False))  # 将聊天上下文作为第二个参数传递
 
 
     # 为下拉按钮创建槽函数-模板
     def full_slot(self):
         selected_item = self.custom_dropdown.currentText()
-        if selected_item == "阅读理解PDF论文":
+        if selected_item == "(开发中）阅读理解PDF论文":
             self.function_1()
         elif selected_item == "自定义选项 2":
             self.function_2()
@@ -129,8 +127,9 @@ class ChatWindow(QMainWindow):
             self.function_4()
 
     def function_1(self):
-        from .function.理解PDF文档内容 import 理解PDF文档内容标准文件输入
-        理解PDF文档内容标准文件输入(self.chat_dialog_body)
+        from .function.function_PDFAnalyzer import PDFAnalyzer
+        temple = PDFAnalyzer(self.chat_dialog_body,self.config)
+        temple.main_pdf()
 
     def function_2(self):
         print("我是2号")

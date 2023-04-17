@@ -1,21 +1,21 @@
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QSizePolicy,\
-    QTextEdit, QPushButton,  QHBoxLayout, QComboBox, QPlainTextEdit, QMainWindow,  QFrame, QDesktopWidget, QLabel, QWidget, QScrollArea, QGridLayout, QSpacerItem
-from PyQt5.QtCore import Qt, pyqtSignal, QThread, QEvent, QSize, QTimer
+from PyQt5.QtWidgets import QDialog, QVBoxLayout,\
+    QPushButton,  QHBoxLayout, QPlainTextEdit, QFrame
+from PyQt5.QtCore import Qt, pyqtSignal, QThread, QEvent, QSize, QTimer, pyqtSlot
 from PyQt5.QtGui import QKeyEvent
 import datetime
 import os
-import re
-import time
-
-import tiktoken
-import numpy as np
 from .openai_request import OpenAI_request
 from .chat_windows import MessageWidget, ChatWidget
 
 # 聊天的具体实现
 class ChatDialogBody(QDialog):
+    # 在这里定义一个信号
+    message_received = pyqtSignal(str, str)
+
     def __init__(self, config, parent=None):
         super().__init__(parent)
+        
+        self.message_received.connect(self.add_message_slot)
 
         self.setWindowModality(Qt.ApplicationModal)
         self.setAttribute(Qt.WA_DeleteOnClose)
@@ -25,7 +25,9 @@ class ChatDialogBody(QDialog):
         self.create_chat_log_file()
         # 调用gpt接口
         self.open_ai = OpenAI_request(config)
-
+        # api的槽函数
+        self.open_ai.response_received.connect(self.handle_response)
+        
         # 创建新线程发出http请求
         # 原来的线程则负责持续更新UI，实现一个超时倒计时，并等待新线程的任务完成
         # #多线程请求
@@ -44,8 +46,6 @@ class ChatDialogBody(QDialog):
         self.init_ui()
 
     def init_ui(self):
-        # api的槽函数
-        self.open_ai.response_received.connect(self.handle_response)
         # 总容器
         layout = QVBoxLayout()
 
@@ -104,6 +104,12 @@ class ChatDialogBody(QDialog):
                 border-radius: 3px;
             }
         """)
+    
+    # 将此方法标记为槽,用来处理自定义多线程函数返回的结果（因为pyqt中不支持线程直接修改主界面)
+    @pyqtSlot(str, str)
+    def add_message_slot(self, sender, message):
+        self.add_message(sender,message)
+        pass
 
     # 发送信息监听，使用回车发送
     def eventFilter(self, source, event):
@@ -156,8 +162,13 @@ class ChatDialogBody(QDialog):
             separator_to_delete.widget().deleteLater()
 
     # 按下发送按钮后的事件
-    def send_message(self):
-        text = self.message_input.toPlainText()
+    def send_message(self, tool=False, sys_prompt=""):
+        # 获取要发送的文本消息
+        if tool:
+            text = tool
+        else:
+            text = self.message_input.toPlainText()
+
         role = "user"
         if text:
             self.add_message(role, text)
@@ -166,8 +177,9 @@ class ChatDialogBody(QDialog):
             self.send_button.setEnabled(False)
             # 用户反馈
             self.context_history[0].append(text)
-            sys_prompt = "You are an AI language model."
-            self.open_ai.prompt_queue.put((text, self.context_history, sys_prompt))
+            if not sys_prompt:
+                sys_prompt = "You are an AI language model."
+            self.open_ai.prompt_queue.put((text, self.context_history, sys_prompt, False))
             self.message_input.clear()
 
     # 处理gpt的返回数据

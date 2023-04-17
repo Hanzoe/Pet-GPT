@@ -1,6 +1,23 @@
 from .crazy_utils import read_and_clean_pdf_text
+import time
+import threading
+
+def send_request_in_thread(self):
+    while not self.get_key:
+        time.sleep(0.1)
+    self.open_ai.prompt_queue.put((i_say, chat_dialog_body.context_history, sys_prompt, True))
 
 def 解析PDF(pdf_dir, chat_dialog_body):
+    #控制队列中的线程，避免一瞬间把所有请求发完，要拿到钥匙之后才能发送下一个
+    get_key = True
+    def tools_handle_response(response):
+        #添加历史到gpt回复
+        chat_dialog_body.context_history[1].append("The main idea of the previous section is?"+response)
+        iteration_results.append(response)
+        get_key = False
+
+    # 用来获取api多线程完成结果（gpt的回复）的槽函数（很重要）
+    chat_dialog_body.open_ai.tools_received.connect(tools_handle_response)    
     print('begin analysis on:', pdf_dir)
     import tiktoken
     ############################## <第 0 步，切割PDF> ##################################
@@ -28,9 +45,10 @@ def 解析PDF(pdf_dir, chat_dialog_body):
 
     ############################## <第 2 步，迭代地历遍整个文章，提取精炼信息> ##################################
     i_say_show_user = f'首先你在英文语境下通读整篇论文。'
-    gpt_say = "[Local Message] 收到。"           # 用户提示
-    chat_dialog_body.append_message([i_say_show_user, gpt_say])
-
+    sys_prompt = "You are an English thesis expert"
+    #发送信息的模板（包括更新到对话框，发送请求以及保存到历史记录，禁用输入框）
+    chat_dialog_body.send_message(tool=i_say_show_user,sys_prompt=sys_prompt)
+    #add_message是只增加到聊天框，不做其他
     iteration_results = []
     last_iteration_result = paper_meta  # 初始值是摘要
     MAX_WORD_TOTAL = 4096
@@ -38,28 +56,25 @@ def 解析PDF(pdf_dir, chat_dialog_body):
     if n_fragment >= 20:
         print('文章极长，不能达到预期效果')
     for i in range(n_fragment):
-        NUM_OF_WORD = MAX_WORD_TOTAL // n_fragment
-        i_say = f"Read this section, recapitulate the content of this section with less than {NUM_OF_WORD} words: {paper_fragments[i]}"
-        i_say_show_user = f"[{i+1}/{n_fragment}] Read this section, recapitulate the content of this section with less than {NUM_OF_WORD} words: {paper_fragments[i][:200]}"
-        iteration_results.append(gpt_say)
-        last_iteration_result = gpt_say
-        chat_dialog_body.append_message(message=f'我:{i_say_show_user}',is_user=True)
-        # 更新聊天上下文
-        chat_dialog_body.context_history += f"user: {i_say}\n"
-        prompt = i_say
-        chat_dialog_body.open_ai.prompt_queue.put((prompt, chat_dialog_body.context_history))  # 将聊天上下文作为第二个参数传递
-        chat_dialog_body.message_input.clear()
-
-        # 保存聊天记录到本地
-        chat_dialog_body.save_chat_history()
+        
+        # 保存到历史
+        # chat_dialog_body.context_history[0].append(i_say)
+        # 将请求放进线程中，避免界面卡顿
+        while not get_key:
+            print("waitting.....")
+            time.sleep(0.1)  # 等待100毫秒后再次检查
+        chat_dialog_body.open_ai.prompt_queue.put((i_say, chat_dialog_body.context_history, sys_prompt,True))
+        get_key = False
 
     ############################## <第 3 步，整理history> ##################################
     final_results.extend(iteration_results)
     final_results.append(f'接下来，你是一名专业的学术教授，利用以上信息，使用中文回答我的问题。')
     # 接下来两句话只显示在界面上，不起实际作用
     i_say_show_user = f'接下来，你是一名专业的学术教授，利用以上信息，使用中文回答我的问题。'
-    gpt_say = "[Local Message] 收到。"
-    chat_dialog_body.append_message([i_say_show_user, gpt_say])
+    chat_dialog_body.add_message("system", i_say_show_user)
+    #启用输入框
+    chat_dialog_body.message_input.setEnabled(True)
+    chat_dialog_body.send_button.setEnabled(True)
 
     ############################## <第 4 步，设置一个token上限，防止回答时Token溢出> ##################################
     from .crazy_utils import input_clipping
@@ -70,9 +85,9 @@ def 理解PDF文档内容标准文件输入(chat_dialog_body):
     import glob
     import os
     # 基本信息：功能、贡献者
-    chat_dialog_body.append_message([
-        "函数插件功能？",
-        "理解PDF论文内容，并且将结合上下文内容，进行学术解答。函数插件贡献者: Hanzoe(it's me), binary-husky"])
+    chat_dialog_body.add_message("system","函数插件功能？\n"+\
+        "理解PDF论文内容，并且将结合上下文内容，进行学术解答。函数插件贡献者: Hanzoe(it's me), binary-husky"
+    )
     import tkinter as tk
     from tkinter import filedialog
     # 获取文件名
@@ -82,7 +97,7 @@ def 理解PDF文档内容标准文件输入(chat_dialog_body):
     try:
         import fitz
     except:
-        chat_dialog_body.append_message("解析项目: {pdf_dir}"+"\n导入软件依赖失败。使用该模块需要额外依赖，安装方法```pip install --upgrade pymupdf```。")
+        chat_dialog_body.add_message("system","解析项目: {pdf_dir}"+"\n导入软件依赖失败。使用该模块需要额外依赖，安装方法```pip install --upgrade pymupdf```。")
 
     # 清空历史，以免输入溢出
     chat_dialog_body.clear_chat_history()

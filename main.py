@@ -1,13 +1,11 @@
 import sys
-from PyQt5.QtCore import Qt, QPoint, QTimer, QSize, QObject, QMetaObject, pyqtSlot as Slot
-from PyQt5.QtGui import QIcon, QPixmap, QPainter, QBrush, QMovie, QKeyEvent, QKeySequence
+from PyQt5.QtCore import Qt, QPoint, QTimer, QSize, QObject
+from PyQt5.QtGui import  QMovie, QKeySequence
 from PyQt5.QtWidgets import QApplication, QWidget, QMenu, QAction, QLabel, QGraphicsDropShadowEffect, QFileDialog, QDialog, QVBoxLayout, \
-    QTextEdit, QPushButton, QLineEdit, QHBoxLayout, QInputDialog, QDesktopWidget, QCheckBox, QKeySequenceEdit
+    QPushButton, QLineEdit, QHBoxLayout, QInputDialog, QDesktopWidget, QCheckBox, QKeySequenceEdit
 from chat_model.chat_main_windows import ChatWindow
-
 import configparser
 import random
-from PIL import Image
 import codecs
 import configparser
 #全局快捷键
@@ -27,8 +25,7 @@ class DesktopPet(QWidget, QObject):
         keyboard_listener_thread = threading.Thread(target=self._run_keyboard_listener, daemon=True)
         keyboard_listener_thread.start()
         self.toggle_chat_window = self.toggle_chat_window
-
-
+    
         # pet自由移动
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_position)
@@ -276,7 +273,7 @@ class DesktopPet(QWidget, QObject):
         layout.addLayout(openai_key_layout)
 
         chat_window_shortcut_layout = QHBoxLayout()
-        chat_window_shortcut_label = QLabel("Chat Shortcut:")
+        chat_window_shortcut_label = QLabel("聊天框快捷键:")
         self.chat_window_shortcut_input = QKeySequenceEdit()
         self.chat_window_shortcut_input.setKeySequence(QKeySequence(self.config.get("Pet", "Shortcuts_CHAT_WINDOW")))
         chat_window_shortcut_layout.addWidget(chat_window_shortcut_label)
@@ -314,20 +311,11 @@ class DesktopPet(QWidget, QObject):
             self.chat_window_open = True
             self.chat_window_state_changed = True
 
-
     #由于keyboard库的add_hotkey函数在主线程中运行，从而阻塞了Qt事件循环导致的。为了解决这个问题，我们可以在一个单独的线程中运行全局快捷键监听器。
     def _run_keyboard_listener(self):
         chat_window_shortcut = self.config.get("Pet", "Shortcuts_CHAT_WINDOW")
         keyboard.add_hotkey(chat_window_shortcut, lambda: QTimer.singleShot(0, pet.toggle_chat_window))
         keyboard.wait()
-
-    # def keyPressEvent(self, event: QKeyEvent):
-    #     chat_window_shortcut = QKeySequence(self.config.get("Pet", "Shortcuts_CHAT_WINDOW"))
-
-    #     if QKeySequence(event.key() | int(event.modifiers())) == chat_window_shortcut:
-    #         QTimer.singleShot(0, self.toggle_chat_window)
-    #     else:
-    #         super().keyPressEvent(event)
 
     def set_chat_window_closed(self):
         self.chat_window_open = False
