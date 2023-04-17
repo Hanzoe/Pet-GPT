@@ -354,13 +354,14 @@ class DesktopPet(QWidget):
         self.bubble.hide()
 
     def save_config(self):
-        with codecs.open('private_config.ini', 'w', 'utf-8') as f:
+        with codecs.open(private_config, 'w', 'utf-8') as f:
             self.config.write(f) 
 
 if __name__ == '__main__':
+    private_config = 'private_config.ini'
     app = QApplication(sys.argv)
     config = configparser.ConfigParser()
-    with codecs.open('private_config.ini', 'r', 'utf-8') as f:
+    with codecs.open(private_config, 'r', 'utf-8') as f:
         # 读取配置文件内容
         config = configparser.ConfigParser()
         config.read_file(f)
