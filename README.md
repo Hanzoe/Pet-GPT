@@ -46,7 +46,7 @@ python解释器 | 模拟python，直接执行命令
    - 点击绿色的“Code”按钮，选择“Download ZIP”
    - 使用git命令`git clone https://github.com/Hanzoe/petgpt.git`下载。
 
-4. 将`config.ini`修改为`private_config.ini` ，并且修改参数"OPENAI_API_KEY"、"LLM_MODEL"。
+4. 将`config.ini`修改为`config_private.ini` ，并且修改参数"OPENAI_API_KEY"、"LLM_MODEL"。
    - 有代理的话，一定要修改自己的代理地址
 
 5. 安装依赖包
