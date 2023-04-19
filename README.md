@@ -32,24 +32,31 @@ python解释器 | 模拟python，直接执行命令
 模块化设计 | 支持自定义高阶的实验性功能与相关代码
 更换宠物图像 | 选择自己喜欢的图像作为展示（虚拟人物、动物都OK）
 自定义快捷键 | 通过自定义快捷键，直接调出对话框
+右键学术优化 | 通过右键直接调用学术优化
 …… | ……
 
 ## 安装与运行
 
-1. 安装 Python 3.9 及以上版本和 PyQt5。
-
-2. 在 OpenAI 上注册账号，并获取 API 密钥。
+1. 在 OpenAI 上注册账号，并获取 API 密钥。
 
    在浏览器中打开 https://beta.openai.com/signup/，填写相关信息注册 OpenAI 账号，并获取 API 密钥。
 
-3. 克隆或下载本项目。
+2. 克隆或下载本项目。
 
    - 点击绿色的“Code”按钮，选择“Download ZIP”
    - 使用git命令`git clone https://github.com/Hanzoe/petgpt.git`下载。
 
-4. 将`config.ini`修改为`config_private.ini` ，并且修改参数"OPENAI_API_KEY"、"LLM_MODEL"。
+3. 将`config.ini`修改为`config_private.ini` ，并且修改参数"OPENAI_API_KEY"、"LLM_MODEL"。
    - 有代理的话，一定要修改自己的代理地址
-
+4. chatgpt-学术优化相关的配置
+   - 配置API_KEY和代理设置
+   - 在`config.py`中，配置 海外Proxy 和 OpenAI API KEY，说明如下
+    ```
+    1. 如果你在国内，需要设置海外代理才能够顺利使用 OpenAI API，设置方法请仔细阅读config.py（1.修改其中的USE_PROXY为True; 2.按照说明修改其中的proxies）。
+    2. 配置 OpenAI API KEY。你需要在 OpenAI 官网上注册并获取 API KEY。一旦你拿到了 API KEY，在 config.py 文件里配置好即可。
+    3. 与代理网络有关的issue（网络超时、代理不起作用）汇总到 https://github.com/binary-husky/chatgpt_academic/issues/1
+    ```
+    （P.S. 程序运行时会优先检查是否存在名为`config_private.py`的私密配置文件，并用其中的配置覆盖`config.py`的同名配置。因此，如果您能理解我们的配置读取逻辑，我们强烈建议您在`config.py`旁边创建一个名为`config_private.py`的新配置文件，并把`config.py`中的配置转移（复制）到`config_private.py`中。`config_private.py`不受git管控，可以让您的隐私信息更加安全。）
 5. 安装依赖包
 
    ```
