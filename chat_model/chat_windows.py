@@ -43,7 +43,7 @@ class MessageWidget(QWidget):
         # 图像
         self.label = QLabel(self)
         self.label.setAlignment(Qt.AlignCenter)
-        avatar = QPixmap("image\\avatar_{}.png".format(role)).scaledToWidth(30).scaledToHeight(30)
+        avatar = QPixmap("pet_image\\avatar_{}.png".format(role)).scaledToWidth(30).scaledToHeight(30)
         self.label.setPixmap(avatar)
         # 文字
         self.text_label = QLabel(self)
