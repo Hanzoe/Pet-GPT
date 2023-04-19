@@ -209,8 +209,6 @@ def main():
             # 监听全局快捷键的线程
             keyboard_listener_thread = threading.Thread(target=self._run_keyboard_listener, daemon=True)
             keyboard_listener_thread.start()
-            self.toggle_chat_window = self.toggle_chat_window
-
             # pet自由移动
             self.timer = QTimer()
             self.timer.timeout.connect(self.update_position)
@@ -233,6 +231,9 @@ def main():
                 self.set_new_timers()  # 初始化停止时间和移动时间
             #快捷键监听
             self.chat_window_open = False
+            # web监听
+            self.chat_web_thread = None
+
 
         #初始化界面
         def init_ui(self):
@@ -434,48 +435,98 @@ def main():
             change_size_button.clicked.connect(self.change_size)
             layout.addWidget(change_size_button)
 
+            openai_key_layout = QHBoxLayout()
+            openai_key_label = QLabel("OpenAI Key:")
+            self.openai_key_input = QLineEdit()
+            self.openai_key_input.setText(self.config.get("OpenAI", "openai_api_key"))
+            openai_key_layout.addWidget(openai_key_label)
+            openai_key_layout.addWidget(self.openai_key_input)
+            layout.addLayout(openai_key_layout)
+
             chat_window_shortcut_layout = QHBoxLayout()
-            chat_window_shortcut_label = QLabel("聊天框快捷键:")
+            chat_window_shortcut_label = QLabel("本地聊天框快捷键:")
             self.chat_window_shortcut_input = QKeySequenceEdit()
             self.chat_window_shortcut_input.setKeySequence(QKeySequence(self.config.get("Pet", "Shortcuts_CHAT_WINDOW")))
             chat_window_shortcut_layout.addWidget(chat_window_shortcut_label)
             chat_window_shortcut_layout.addWidget(self.chat_window_shortcut_input)
             layout.addLayout(chat_window_shortcut_layout)
 
+            chat_web_shortcut_layout = QHBoxLayout()
+            chat_web_shortcut_label = QLabel("学术优化快捷键:")
+            self.chat_web_shortcut_input = QKeySequenceEdit()
+            self.chat_web_shortcut_input.setKeySequence(QKeySequence(self.config.get("Pet", "Shortcuts_CHAT_WEB")))
+            chat_web_shortcut_layout.addWidget(chat_web_shortcut_label)
+            chat_web_shortcut_layout.addWidget(self.chat_web_shortcut_input)
+            layout.addLayout(chat_web_shortcut_layout)
+
             ok_button = QPushButton("确定", self)
-            ok_button.clicked.connect(lambda: self.save_all_config(self.walk_checkbox.isChecked(), self.random_question_checkbox.isChecked(), self.openai_key_input.text(), self.chat_window_shortcut_input.keySequence().toString()))
+            ok_button.clicked.connect(lambda: self.save_all_config(self.walk_checkbox.isChecked(), self.random_question_checkbox.isChecked(), self.openai_key_input.text(), self.chat_window_shortcut_input.keySequence().toString(), self.chat_web_shortcut_input.keySequence().toString()))
             ok_button.clicked.connect(settings_dialog.accept)
             layout.addWidget(ok_button)
 
             settings_dialog.setLayout(layout)
             settings_dialog.exec_()
 
-        def save_all_config(self, random_walk, random_chat, openai_key, chat_window_shortcut):
+        def save_all_config(self, random_walk, random_chat, openai_key, chat_window_shortcut,chat_web_shortcut):
             self.config.set('Pet', 'RANDOM_WALK', str(random_walk))
             self.config.set('Pet', 'RANDOM_CHAT', str(random_chat))
+            self.config.set("OpenAI", "openai_api_key", openai_key)
             self.config.set("Pet", "Shortcuts_CHAT_WINDOW", chat_window_shortcut)
+            self.config.set("Pet", "Shortcuts_CHAT_WEB", chat_web_shortcut)
             self.save_config()
 
-        #快捷键打开网页版窗口
-        def toggle_chat_web(self):
-            def run_chat_web():
-                import asyncio
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                try:
-                    auto_opentab_delay()
-                    demo.queue(concurrency_count=CONCURRENT_COUNT).launch(server_name="0.0.0.0", server_port=PORT, auth=AUTHENTICATION)
-                finally:
-                    loop.close()
+        def run_chat_web(self):
+            import asyncio
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
 
-            chat_web_thread = threading.Thread(target=run_chat_web)
-            chat_web_thread.start()
+            try:
+                auto_opentab_delay()
+                self.url = f"http://0.0.0.0:{PORT}?__dark-theme=true"
+                demo.queue(concurrency_count=CONCURRENT_COUNT).launch(
+                    server_name="0.0.0.0",
+                    server_port=PORT,
+                    auth=AUTHENTICATION,
+                )
+            finally:
+                loop.close()
+
+        def open_webpage(self):
+            import webbrowser
+            # Add your code to open the webpage here. This depends on the browser and how you want to open the webpage.
+            webbrowser.open(self.url, new=0, autoraise=True)
+
+        def toggle_chat_web(self):
+            if self.chat_web_thread is None:
+                self.chat_web_thread = threading.Thread(target=self.run_chat_web)
+                self.chat_web_thread.start()
+            else:
+                self.open_webpage()
+            
+
+        #快捷键打开网页版窗口
+        # def toggle_chat_web(self):
+        #     def run_chat_web():
+        #         import asyncio
+        #         loop = asyncio.new_event_loop()
+        #         asyncio.set_event_loop(loop)
+        #         try:
+        #             auto_opentab_delay()
+        #             demo.queue(concurrency_count=CONCURRENT_COUNT).launch(server_name="0.0.0.0", server_port=PORT, auth=AUTHENTICATION)
+        #         finally:
+        #             loop.close()
+
+        #     chat_web_thread = threading.Thread(target=run_chat_web)
+        #     chat_web_thread.start()
 
         #由于keyboard库的add_hotkey函数在主线程中运行，从而阻塞了Qt事件循环导致的。为了解决这个问题，我们可以在一个单独的线程中运行全局快捷键监听器。
         def _run_keyboard_listener(self):
             chat_window_shortcut = self.config.get("Pet", "Shortcuts_CHAT_WINDOW")
+            chat_web_shortcut = self.config.get("Pet", "Shortcuts_CHAT_WEB")
             keyboard.add_hotkey(chat_window_shortcut, lambda: QTimer.singleShot(0, pet.toggle_chat_window))
+            keyboard.add_hotkey(chat_web_shortcut, lambda: QTimer.singleShot(0, pet.toggle_chat_web))
             keyboard.wait()
+            
 
         def set_chat_window_closed(self):
             self.chat_window_open = False
