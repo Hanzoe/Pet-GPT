@@ -265,7 +265,7 @@ def main():
             #右键功能区，可以自定义（擅长的朋友）
             self.menu = QMenu(self)
             #调用gpt聊天框
-            chat_action = QAction("本地聊天", self, triggered=self.toggle_chat_window)
+            chat_action = QAction("(开发中）本地聊天", self, triggered=self.toggle_chat_window)
             #调用web学术优化聊天框
             web_action = QAction("学术优化", self, triggered=self.toggle_chat_web)
             change_icon_action = QAction("更换图标", self, triggered=self.change_icon)
