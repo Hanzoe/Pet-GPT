@@ -32,7 +32,7 @@ python解释器 | 模拟python，直接执行命令
 模块化设计 | 支持自定义高阶的实验性功能与相关代码
 更换宠物图像 | 选择自己喜欢的图像作为展示（虚拟人物、动物都OK）
 自定义快捷键 | 通过自定义快捷键，直接调出对话框
-右键学术优化 | 通过右键直接调用学术优化
+右键学术优化 | 通过右键直接调用学术优化(https://github.com/binary-husky/chatgpt_academic)
 …… | ……
 
 ## 安装与运行
@@ -96,6 +96,7 @@ python解释器 | 模拟python，直接执行命令
  
 - 右键支持跳转学术优化
     项目地址：https://github.com/binary-husky/chatgpt_academic
+    
     ![image](https://user-images.githubusercontent.com/46673445/233023364-b1cbeeb3-d698-498b-afce-18891096cd22.png)
 
 
@@ -174,3 +175,6 @@ Done
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=Hanzoe/Pet-GPT&type=Date)](https://star-history.com/#Hanzoe/Pet-GPT&Date)
+
+## 免责申明
+此项目仅供个人学习，禁止商用或者其他非法用途
