@@ -160,11 +160,7 @@ Done
 ## 贡献者
 
 
-## 联系方式
 
-一个人也许走的很快，但是一群人可以走得更远！
-
-![image](https://user-images.githubusercontent.com/46673445/232263608-c2f4982f-292e-41bd-b646-96a1140f22ee.png)
 
 ## 参考
 1. https://github.com/f/awesome-chatgpt-prompts（获取prompts命令）
