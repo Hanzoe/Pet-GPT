@@ -165,7 +165,7 @@ Done
 ## 参考
 1. https://github.com/f/awesome-chatgpt-prompts（获取prompts命令）
 2. https://github.com/tommyli3318/desktop-pet（想做桌面宠物版的）
-3. https://github.com/binary-husky/chatgpt_academic（曾经在这上面做插件奉献，从而得到灵感）
+3. [https://github.com/binary-husky/chatgpt_academic](https://github.com/binary-husky/gpt_academic)（曾经在这上面做插件奉献，从而得到灵感）
 4. https://gitee.com/fg_slash/yuanshen-desktoppet#https://gitee.com/link?target=https%3A%2F%2Fpan.baidu.com%2Fs%2F1AuUjMnYgNScTla7yQA19Og（参考了gif图）
 
 ## Star History
