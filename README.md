@@ -170,7 +170,7 @@ Done
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=Hanzoe/Pet-GPT&type=Date)](https://star-history.com/#Hanzoe/Pet-GPT&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=Hanzoe/Pet-GPT&type=Date)](https://www.star-history.com/#Hanzoe/Pet-GPT&Date)
 
 ## 免责申明
 此项目仅供个人学习，禁止商用或者其他非法用途
